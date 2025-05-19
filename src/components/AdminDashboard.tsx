@@ -10,17 +10,37 @@ import {
 
 
 export default function AdminDashboard() {
-  const [product, setProduct] = useState({ name: '', price: '', brand: '', description: '' });
+  const [product, setProduct] = useState({ name: '', price: '', brand: '', description: '', image: null as File | null, });
 
   const handleChange = (e:any) => setProduct({ ...product, [e.target.name]: e.target.value });
 
   const handleSubmit = async () => {
-    const token = localStorage.getItem('token');
-    await API.post('/products/addproduct', product, {
-      headers: { Authorization: `Bearer ${token}` },
+  const token = localStorage.getItem('token');
+
+  const formData = new FormData();
+  formData.append('name', product.name);
+  formData.append('price', product.price.toString());
+  formData.append('brand', product.brand);
+  formData.append('description', product.description);
+  if (product.image) {
+    formData.append('image', product.image);
+  }
+
+  try {
+    await API.post('/products/addproduct', formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data',
+      },
     });
     alert('Product Added');
-  };
+    // Optionally reset form here
+    setProduct({ name: '', price: '', brand: '', description: '', image: null });
+  } catch (error) {
+    alert('Failed to add product');
+    console.error(error);
+  }
+};
 
   return (
   
@@ -82,7 +102,31 @@ export default function AdminDashboard() {
             value={product.description}
             onChange={handleChange}
           />
+ <input
+    accept="image/*"
+    type="file"
+    id="product-image"
+    style={{ display: 'none' }}
+    onChange={(e) => {
+      if (e.target.files && e.target.files.length > 0) {
+        setProduct((prev) => ({ ...prev, image: e.target.files![0] }));
+      }
+    }}
+  />
+  <label htmlFor="product-image">
+    <Button variant="outlined" component="span" sx={{ mb: 2 }}>
+      Upload Image
+    </Button>
+  </label>
 
+  {product.image && (
+    <Box
+      component="img"
+      src={URL.createObjectURL(product.image)}
+      alt="Preview"
+      sx={{ width: '100%', maxHeight: 200, objectFit: 'contain', mb: 2, borderRadius: 1 }}
+    />
+  )}
           <Button variant="contained" color="primary" onClick={handleSubmit}>
             Add Product
           </Button>

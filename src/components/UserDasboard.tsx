@@ -18,6 +18,7 @@ interface Product {
   name: string;
   brand: string;
   price: number;
+  image:any;
   description: string | null;
 }
 
@@ -35,6 +36,7 @@ export default function UserDashboard() {
 
   useEffect(() => {
     API.get('/products/allproduct').then((res) => {
+      // console.log(res.data)
       setProducts(res.data);
       setFilteredProducts(res.data);
       // Set price range dynamically based on products
